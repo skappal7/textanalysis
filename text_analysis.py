@@ -9,16 +9,13 @@ Original file is located at
 import streamlit as st
 import pandas as pd
 import nltk
-from nltk import word_tokenize, pos_tag, ne_chunk
+from nltk import word_tokenize
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from textblob import TextBlob
 
 # Download NLTK resources
 nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('maxent_ne_chunker')
-nltk.download('words')
 
 # Function to perform Sentiment Analysis
 def analyze_sentiment(text):
@@ -31,27 +28,23 @@ def analyze_sentiment(text):
     else:
         return 'Neutral'
 
-# Function to perform Named Entity Recognition
-def analyze_entities(text):
-    entities = []
-    sentences = nltk.sent_tokenize(text)
-    for sentence in sentences:
-        words = nltk.word_tokenize(sentence)
-        tagged_words = nltk.pos_tag(words)
-        chunked = nltk.ne_chunk(tagged_words)
-        entities.extend([(c[0], c.label()) for c in chunked if hasattr(c, 'label')])
-    return entities
+# Function to generate Word Cloud for positive sentiment words
+def generate_positive_wordcloud(text):
+    positive_words = ' '.join([word for word in word_tokenize(text) if analyze_sentiment(word) == 'Positive'])
+    wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(positive_words)
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    st.pyplot()
 
-# Function to generate Word Cloud
-def generate_wordcloud(text, fig=None):
-    wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(text)
-    if fig is None:
-        fig, ax = plt.subplots(figsize=(10, 5))
-    else:
-        ax = fig.subplots()
-    ax.imshow(wordcloud, interpolation='bilinear')
-    ax.axis('off')
-    st.pyplot(fig)
+# Function to generate Word Cloud for negative sentiment words
+def generate_negative_wordcloud(text):
+    negative_words = ' '.join([word for word in word_tokenize(text) if analyze_sentiment(word) == 'Negative'])
+    wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(negative_words)
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    st.pyplot()
 
 # Main function
 def main():
@@ -77,21 +70,14 @@ def main():
             st.write("Sentiment Histogram:")
             st.bar_chart(sentiment_df['Sentiment'].value_counts())
 
-        # Perform Named Entity Recognition
-        ner_analysis = st.checkbox("Perform Named Entity Recognition")
-        if ner_analysis:
-            entities = []
-            for chunk in nltk.sent_tokenize(text):
-                entities.extend(analyze_entities(chunk))
-            entities_df = pd.DataFrame(entities, columns=['Entity', 'Type'])
-            st.write("Named Entities:")
-            st.dataframe(entities_df)  # Display named entities in a table format
+        # Generate Word Cloud for positive sentiment words
+        st.write("Positive Sentiment Word Cloud:")
+        generate_positive_wordcloud(text)
 
-        # Generate Word Cloud
-        wordcloud_analysis = st.checkbox("Generate Word Cloud")
-        if wordcloud_analysis:
-            fig, ax = plt.subplots()
-            generate_wordcloud(text, fig=fig)
+        # Generate Word Cloud for negative sentiment words
+        st.write("Negative Sentiment Word Cloud:")
+        generate_negative_wordcloud(text)
 
 if __name__ == "__main__":
     main()
+
