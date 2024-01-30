@@ -22,6 +22,15 @@ nltk.download('averaged_perceptron_tagger')
 
 # Function to perform sentiment analysis using TextBlob
 def analyze_sentiment(text):
+    """
+    Perform sentiment analysis on the input text using TextBlob.
+
+    Parameters:
+        text (str): Input text to analyze.
+
+    Returns:
+        str: Sentiment label ("Positive", "Negative", or "Neutral").
+    """
     blob = TextBlob(text)
     sentiment_score = blob.sentiment.polarity
     if sentiment_score > 0:
@@ -33,6 +42,15 @@ def analyze_sentiment(text):
 
 # Function to perform named entity recognition using NLTK
 def analyze_named_entities(text):
+    """
+    Perform named entity recognition on the input text using NLTK.
+
+    Parameters:
+        text (str): Input text to analyze.
+
+    Returns:
+        list: List of named entities found in the text.
+    """
     entities = []
     for chunk in ne_chunk(pos_tag(word_tokenize(text))):
         if isinstance(chunk, Tree):
@@ -41,6 +59,18 @@ def analyze_named_entities(text):
 
 # Function to connect to MySQL database
 def connect_to_mysql(host, user, password, database):
+    """
+    Connect to a MySQL database.
+
+    Parameters:
+        host (str): MySQL host address.
+        user (str): MySQL username.
+        password (str): MySQL password.
+        database (str): Database name.
+
+    Returns:
+        MySQLConnection: MySQL database connection object.
+    """
     try:
         conn = mysql.connector.connect(
             host=host,
