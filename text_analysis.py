@@ -54,35 +54,48 @@ def main():
         df = pd.read_csv(uploaded_file)
         # Filter out only text columns
         text_columns = [col for col in df.columns if df[col].dtype == 'object']
-        df = df[text_columns]
+        df = df[text_columns].drop(columns=['unnamed', 'rows'], errors='ignore')
 
         # Display uploaded data
         st.write(df)
-
+    
         # Perform text analytics based on selected options
         if st.button("Perform Text Analytics"):
-            st.subheader("Sentiment Analysis Results")
             for col in text_columns:
-                st.write(f"Column: {col}")
+                st.subheader(f"Text Analytics for Column: {col}")
+                # Sentiment analysis
+                st.subheader("Sentiment Analysis Results")
                 df[f'{col}_Sentiment'] = df[col].apply(analyze_sentiment)
                 st.write(df[[col, f'{col}_Sentiment']])
 
-            st.subheader("Named Entity Recognition Results")
-            for col in text_columns:
-                st.write(f"Column: {col}")
+                # Named entity recognition
+                st.subheader("Named Entity Recognition Results")
                 df[f'{col}_Entities'] = df[col].apply(analyze_named_entities)
                 st.write(df[[col, f'{col}_Entities']])
-    
+
     # Visualizations
     st.sidebar.title("Visualizations")
+    if st.sidebar.checkbox("Show Histogram"):
+        st.subheader("Histogram")
+        if 'text' in df.columns:
+            text_column = st.sidebar.selectbox("Select column for histogram:", df.columns)
+            fig, ax = plt.subplots(figsize=(8, 6))  # Set a smaller figure size
+            df[text_column].hist(ax=ax)  # Plot the histogram on the axes
+            st.pyplot(fig)  # Display the figure using st.pyplot()
+        else:
+            st.warning("No data to display.")
+    
     if st.sidebar.checkbox("Show Word Cloud"):
         st.subheader("Word Cloud")
-        text = ' '.join(df[text_columns].values.flatten())
-        wordcloud = WordCloud().generate(text)
-        fig, ax = plt.subplots(figsize=(8, 6))  # Set a smaller figure size
-        ax.imshow(wordcloud, interpolation='bilinear')
-        ax.axis("off")
-        st.pyplot(fig)  # Display the figure using st.pyplot()
+        if 'text' in df.columns:
+            text = ' '.join(df['text'])
+            wordcloud = WordCloud().generate(text)
+            fig, ax = plt.subplots(figsize=(8, 6))  # Set a smaller figure size
+            ax.imshow(wordcloud, interpolation='bilinear')
+            ax.axis("off")
+            st.pyplot(fig)  # Display the figure using st.pyplot()
+        else:
+            st.warning("No data to display.")
 
 if __name__ == "__main__":
     main()
