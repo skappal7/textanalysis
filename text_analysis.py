@@ -57,13 +57,19 @@ def main():
             st.write("Sentiment Histogram:")
             st.bar_chart(sentiment_df['Sentiment'].value_counts())
 
-        # Generate Word Cloud for sentiment words
-        wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(text)
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.imshow(wordcloud, interpolation='bilinear')
-        ax.axis('off')
-        st.pyplot(fig)
+        # Separate positive and negative sentiment words
+        positive_words = ' '.join([word for word in word_tokenize(text) if analyze_sentiment(word) == 'Positive'])
+        negative_words = ' '.join([word for word in word_tokenize(text) if analyze_sentiment(word) == 'Negative'])
+
+        # Generate Word Cloud for positive sentiment words
+        positive_wordcloud = WordCloud(width=400, height=200, background_color ='white').generate(positive_words)
+        st.write("Positive Sentiment Word Cloud:")
+        st.image(positive_wordcloud.to_array(), caption='Positive Sentiment Word Cloud', use_column_width=True)
+
+        # Generate Word Cloud for negative sentiment words
+        negative_wordcloud = WordCloud(width=400, height=200, background_color ='white').generate(negative_words)
+        st.write("Negative Sentiment Word Cloud:")
+        st.image(negative_wordcloud.to_array(), caption='Negative Sentiment Word Cloud', use_column_width=True)
 
 if __name__ == "__main__":
     main()
-
