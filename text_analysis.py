@@ -72,6 +72,10 @@ def main():
             st.write("Sentiment Histogram:")
             st.bar_chart(sentiment_df['Sentiment'].value_counts())
 
+        # Paginated display of uploaded data
+        st.write("Uploaded Data:")
+        st.dataframe(df, height=400)
+
     # User text input
     text = st.text_area("Or enter text for analysis:")
 
@@ -86,7 +90,7 @@ def main():
             entities = analyze_entities(text)
             entities_df = pd.DataFrame(entities, columns=['Entity', 'Type'])
             st.write("Named Entities:")
-            st.write(entities_df)
+            st.dataframe(entities_df, height=200)
 
         # Generate Word Cloud
         if wordcloud_analysis:
