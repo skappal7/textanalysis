@@ -70,9 +70,12 @@ def main():
             st.write("Sentiment Histogram:")
             st.bar_chart(sentiment_df['Sentiment'].value_counts())
 
-        # Display uploaded data in a table
+        # Paginated display of uploaded data
         st.write("Uploaded Data:")
-        st.dataframe(df, height=400)
+        st.dataframe(df.head(10), height=400)
+        if len(df) > 10:
+            st.write("Showing first 10 rows. Use the pagination below to view more.")
+            st.dataframe(df[10:], height=400)
 
     # User text input
     text = st.text_area("Or enter text for analysis:")
