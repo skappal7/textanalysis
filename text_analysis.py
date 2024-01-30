@@ -14,7 +14,6 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from collections import Counter
-import seaborn as sns
 
 # Download NLTK resources
 nltk.download('punkt')
@@ -38,6 +37,15 @@ def generate_wordcloud(text):
     plt.axis('off')
     st.pyplot()
 
+# Function to plot histogram of sentiment scores
+def plot_sentiment_histogram(sentiment_scores):
+    plt.figure(figsize=(8, 5))
+    plt.hist(sentiment_scores, bins=20, color='skyblue', edgecolor='black', alpha=0.7)
+    plt.xlabel('Sentiment Score')
+    plt.ylabel('Frequency')
+    plt.title('Sentiment Score Distribution')
+    st.pyplot()
+
 # Main function
 def main():
     st.title("Text Analysis App")
@@ -57,11 +65,7 @@ def main():
 
         # Generate sentiment histogram
         if sentiment_scores:
-            plt.figure(figsize=(8, 5))
-            sns.histplot(sentiment_scores, bins=20, kde=True)
-            plt.xlabel('Sentiment Score')
-            plt.ylabel('Frequency')
-            st.pyplot()
+            plot_sentiment_histogram(sentiment_scores)
 
         # Perform word frequency analysis
         word_freq = Counter(word_tokenize(text))
@@ -78,3 +82,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
