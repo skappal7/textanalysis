@@ -65,6 +65,13 @@ def main():
         sentiment = analyze_sentiment(text)
         st.write("Sentiment:", sentiment)
 
+        # Generate sentiment histogram
+        if sentiment:
+            sentiments = [analyze_sentiment(row) for row in df[text_column].dropna()]
+            sentiment_df = pd.DataFrame(sentiments, columns=['Sentiment'])
+            st.write("Sentiment Histogram:")
+            st.bar_chart(sentiment_df['Sentiment'].value_counts())
+
     # User text input
     text = st.text_area("Or enter text for analysis:")
 
