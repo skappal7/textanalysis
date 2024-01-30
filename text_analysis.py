@@ -43,12 +43,13 @@ def analyze_entities(text):
     return entities
 
 # Function to generate Word Cloud
-def generate_wordcloud(text):
+def generate_wordcloud(text, fig=None):
     wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(text)
-    plt.figure(figsize=(10, 5))
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis('off')
-    st.pyplot()
+    if fig is None:
+        fig, ax = plt.subplots(figsize=(10, 5))
+    ax.imshow(wordcloud, interpolation='bilinear')
+    ax.axis('off')
+    st.pyplot(fig)
 
 # Main function
 def main():
@@ -85,7 +86,8 @@ def main():
         # Generate Word Cloud
         wordcloud_analysis = st.checkbox("Generate Word Cloud")
         if wordcloud_analysis:
-            generate_wordcloud(text)
+            fig, ax = plt.subplots()
+            generate_wordcloud(text, fig=fig)
 
 if __name__ == "__main__":
     main()
