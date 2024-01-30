@@ -2,6 +2,6 @@ streamlit
 pandas
 mysql-connector-python
 textblob
-spacy
+nltk
 matplotlib
 wordcloud
