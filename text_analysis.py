@@ -8,7 +8,6 @@ Original file is located at
 """
 import streamlit as st
 import pandas as pd
-import mysql.connector
 from textblob import TextBlob
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
@@ -39,20 +38,6 @@ def analyze_named_entities(text):
             entities.append(" ".join([token for token, pos in chunk.leaves()]))
     return entities
 
-# Function to connect to MySQL database
-def connect_to_mysql(host, user, password, database):
-    try:
-        conn = mysql.connector.connect(
-            host=host,
-            user=user,
-            password=password,
-            database=database
-        )
-        return conn
-    except mysql.connector.Error as err:
-        st.error(f"Error: {err}")
-        return None
-
 # Streamlit app
 def main():
     st.set_page_config(
@@ -63,79 +48,41 @@ def main():
     )
     st.title("Text Analytics")
     
-    # Upload CSV or connect to MySQL
-    upload_option = st.radio("Select data source:", ("Upload CSV", "Connect to MySQL"))
-    
-    # Text analytics options
-    st.sidebar.title("Text Analytics Options")
-    sentiment_analysis = st.sidebar.checkbox("Sentiment Analysis")
-    named_entity_recognition = st.sidebar.checkbox("Named Entity Recognition")
-    
-    # If MySQL option is selected, ask for credentials
-    if upload_option == "Connect to MySQL":
-        st.subheader("MySQL Database Connection")
-        host = st.text_input("Host")
-        user = st.text_input("User")
-        password = st.text_input("Password", type="password")
-        database = st.text_input("Database")
-        conn = connect_to_mysql(host, user, password, database)
-        if conn is not None:
-            cursor = conn.cursor()
-            table_name = st.text_input("Table Name")
-            if st.button("Fetch Data"):
-                cursor.execute(f"SELECT * FROM {table_name}")
-                data = cursor.fetchall()
-                df = pd.DataFrame(data, columns=[i[0] for i in cursor.description])
-                st.write(df.drop(columns=['unnamed', 'rows'], errors='ignore'))
-    
-    # If CSV option is selected, upload file
-    else:
-        uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
-        if uploaded_file is not None:
-            df = pd.read_csv(uploaded_file)
-            st.write(df.drop(columns=['unnamed', 'rows'], errors='ignore'))
-    
-    # Perform text analytics based on selected options
-    if st.button("Perform Text Analytics"):
-        if sentiment_analysis:
+    # Upload CSV
+    uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)
+        # Filter out only text columns
+        text_columns = [col for col in df.columns if df[col].dtype == 'object']
+        df = df[text_columns]
+
+        # Display uploaded data
+        st.write(df)
+
+        # Perform text analytics based on selected options
+        if st.button("Perform Text Analytics"):
             st.subheader("Sentiment Analysis Results")
-            if 'text' in df.columns:
-                df['Sentiment'] = df['text'].apply(analyze_sentiment)
-                st.write(df[['text', 'Sentiment']].drop(columns=['unnamed', 'rows'], errors='ignore'))
-            else:
-                st.warning("No 'text' column found in the data.")
-        
-        if named_entity_recognition:
+            for col in text_columns:
+                st.write(f"Column: {col}")
+                df[f'{col}_Sentiment'] = df[col].apply(analyze_sentiment)
+                st.write(df[[col, f'{col}_Sentiment']])
+
             st.subheader("Named Entity Recognition Results")
-            if 'text' in df.columns:
-                df['Entities'] = df['text'].apply(analyze_named_entities)
-                st.write(df[['text', 'Entities']].drop(columns=['unnamed', 'rows'], errors='ignore'))
-            else:
-                st.warning("No 'text' column found in the data.")
+            for col in text_columns:
+                st.write(f"Column: {col}")
+                df[f'{col}_Entities'] = df[col].apply(analyze_named_entities)
+                st.write(df[[col, f'{col}_Entities']])
     
     # Visualizations
     st.sidebar.title("Visualizations")
-    if st.sidebar.checkbox("Show Histogram"):
-        st.subheader("Histogram")
-        if 'text' in df.columns:
-            text_column = st.sidebar.selectbox("Select column for histogram:", df.columns)
-            fig, ax = plt.subplots(figsize=(8, 6))  # Set a smaller figure size
-            df[text_column].hist(ax=ax)  # Plot the histogram on the axes
-            st.pyplot(fig)  # Display the figure using st.pyplot()
-        else:
-            st.warning("No data to display.")
-    
     if st.sidebar.checkbox("Show Word Cloud"):
         st.subheader("Word Cloud")
-        if 'text' in df.columns:
-            text = ' '.join(df['text'])
-            wordcloud = WordCloud().generate(text)
-            fig, ax = plt.subplots(figsize=(8, 6))  # Set a smaller figure size
-            ax.imshow(wordcloud, interpolation='bilinear')
-            ax.axis("off")
-            st.pyplot(fig)  # Display the figure using st.pyplot()
-        else:
-            st.warning("No data to display.")
+        text = ' '.join(df[text_columns].values.flatten())
+        wordcloud = WordCloud().generate(text)
+        fig, ax = plt.subplots(figsize=(8, 6))  # Set a smaller figure size
+        ax.imshow(wordcloud, interpolation='bilinear')
+        ax.axis("off")
+        st.pyplot(fig)  # Display the figure using st.pyplot()
 
 if __name__ == "__main__":
     main()
