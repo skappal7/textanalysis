@@ -110,4 +110,32 @@ def main():
             if 'text' in df.columns:
                 df['Entities'] = df['text'].apply(analyze_named_entities)
                 st.write(df[['text', 'Entities']])
- 
+            else:
+                st.warning("No 'text' column found in the data.")
+    
+    # Visualizations
+    st.sidebar.title("Visualizations")
+    if st.sidebar.checkbox("Show Histogram"):
+        st.subheader("Histogram")
+        if 'text' in df.columns:
+            text_column = st.sidebar.selectbox("Select column for histogram:", df.columns)
+            fig, ax = plt.subplots(figsize=(8, 6))  # Set a smaller figure size
+            df[text_column].hist(ax=ax)  # Plot the histogram on the axes
+            st.pyplot(fig)  # Display the figure using st.pyplot()
+        else:
+            st.warning("No data to display.")
+    
+    if st.sidebar.checkbox("Show Word Cloud"):
+        st.subheader("Word Cloud")
+        if 'text' in df.columns:
+            text = ' '.join(df['text'])
+            wordcloud = WordCloud().generate(text)
+            fig, ax = plt.subplots(figsize=(8, 6))  # Set a smaller figure size
+            ax.imshow(wordcloud, interpolation='bilinear')
+            ax.axis("off")
+            st.pyplot(fig)  # Display the figure using st.pyplot()
+        else:
+            st.warning("No data to display.")
+
+if __name__ == "__main__":
+    main()
