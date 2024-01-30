@@ -80,7 +80,9 @@ def main():
         # Perform Named Entity Recognition
         ner_analysis = st.checkbox("Perform Named Entity Recognition")
         if ner_analysis:
-            entities = analyze_entities(text)
+            entities = []
+            for chunk in nltk.sent_tokenize(text):
+                entities.extend(analyze_entities(chunk))
             entities_df = pd.DataFrame(entities, columns=['Entity', 'Type'])
             st.write("Named Entities:")
             st.dataframe(entities_df)  # Display named entities in a table format
