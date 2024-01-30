@@ -14,6 +14,7 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from textblob import TextBlob
 
+# Download NLTK resources
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
 nltk.download('maxent_ne_chunker')
@@ -59,7 +60,10 @@ def main():
         df = pd.read_csv(uploaded_file)
         text_column = st.selectbox("Select text column:", df.columns)
         text = ' '.join(df[text_column].dropna())
-        st.write("Text for sentiment analysis:", text)
+        st.write("Uploaded Data:")
+        st.dataframe(df, height=400)  # Display uploaded data in a table format
+
+        # Analyze sentiment
         sentiment = analyze_sentiment(text)
         st.write("Sentiment:", sentiment)
 
@@ -70,40 +74,18 @@ def main():
             st.write("Sentiment Histogram:")
             st.bar_chart(sentiment_df['Sentiment'].value_counts())
 
-        # Display uploaded data in a table
-        st.write("Uploaded Data:")
-        st.dataframe(df, height=400)
-
-    # User text input
-    text = st.text_area("Or enter text for analysis:")
-
-    # Sidebar for analysis selection
-    st.sidebar.title("Analysis Selection")
-    ner_analysis = st.sidebar.checkbox("Named Entity Recognition")
-    wordcloud_analysis = st.sidebar.checkbox("Word Cloud")
-
-    if st.button("Analyze"):
         # Perform Named Entity Recognition
+        ner_analysis = st.checkbox("Perform Named Entity Recognition")
         if ner_analysis:
             entities = analyze_entities(text)
             entities_df = pd.DataFrame(entities, columns=['Entity', 'Type'])
             st.write("Named Entities:")
-            st.dataframe(entities_df)
+            st.dataframe(entities_df)  # Display named entities in a table format
 
         # Generate Word Cloud
+        wordcloud_analysis = st.checkbox("Generate Word Cloud")
         if wordcloud_analysis:
             generate_wordcloud(text)
-
-        # Display results in a table
-        if ner_analysis:
-            st.write("Analysis Results:")
-            st.write(pd.DataFrame({'Text': [text]}))
-
-        # Download results as CSV
-        if st.button("Download CSV"):
-            if ner_analysis:
-                pd.DataFrame({'Text': [text]}).to_csv('analysis_results.csv', index=False)
-                st.success("Results downloaded successfully!")
 
 if __name__ == "__main__":
     main()
