@@ -14,6 +14,7 @@ import pandas as pd
 import nltk
 from nltk import word_tokenize, pos_tag, ne_chunk
 from nltk.corpus import stopwords
+from nltk.chunk import conlltags2tree, tree2conlltags
 
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
@@ -39,9 +40,7 @@ def analyze_entities(text):
         words = nltk.word_tokenize(sentence)
         tagged_words = nltk.pos_tag(words)
         chunked = nltk.ne_chunk(tagged_words)
-        for entity in chunked:
-            if hasattr(entity, 'label'):
-                entities.append(' '.join(c[0] for c in entity.leaves()))
+        entities.extend([(c[0], c[1]) for c in tree2conlltags(chunked)])
     return entities
 
 # Function to generate Word Cloud
@@ -56,25 +55,31 @@ def generate_wordcloud(text):
 def main():
     st.title("Text Analysis App")
 
+    # Option to upload a CSV file for sentiment analysis
+    uploaded_file = st.file_uploader("Upload CSV file for sentiment analysis:", type=["csv"])
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)
+        text_column = st.selectbox("Select text column:", df.columns)
+        text = ' '.join(df[text_column].dropna())
+        st.write("Text for sentiment analysis:", text)
+        sentiment = analyze_sentiment(text)
+        st.write("Sentiment:", sentiment)
+
     # User text input
-    text = st.text_area("Enter text:")
+    text = st.text_area("Or enter text for analysis:")
 
     # Sidebar for analysis selection
     st.sidebar.title("Analysis Selection")
-    sentiment_analysis = st.sidebar.checkbox("Sentiment Analysis")
     ner_analysis = st.sidebar.checkbox("Named Entity Recognition")
     wordcloud_analysis = st.sidebar.checkbox("Word Cloud")
 
     if st.button("Analyze"):
-        # Perform Sentiment Analysis
-        if sentiment_analysis:
-            sentiment = analyze_sentiment(text)
-            st.write("Sentiment:", sentiment)
-
         # Perform Named Entity Recognition
         if ner_analysis:
             entities = analyze_entities(text)
-            st.write("Entities:", ', '.join(entities))
+            entities_df = pd.DataFrame(entities, columns=['Entity', 'Type'])
+            st.write("Named Entities:")
+            st.write(entities_df)
 
         # Generate Word Cloud
         if wordcloud_analysis:
@@ -82,14 +87,16 @@ def main():
             st.pyplot(fig)
 
         # Display results in a table
-        df = pd.DataFrame({'Text': [text], 'Entities': [', '.join(entities) if ner_analysis else '']})
-        st.write("Analysis Results:")
-        st.write(df)
+        if ner_analysis:
+            df = pd.DataFrame({'Text': [text]})
+            st.write("Analysis Results:")
+            st.write(df)
 
         # Download results as CSV
         if st.button("Download CSV"):
-            df.to_csv('analysis_results.csv', index=False)
-            st.success("Results downloaded successfully!")
+            if ner_analysis:
+                df.to_csv('analysis_results.csv', index=False)
+                st.success("Results downloaded successfully!")
 
 if __name__ == "__main__":
     main()
