@@ -14,7 +14,6 @@ import pandas as pd
 import nltk
 from nltk import word_tokenize, pos_tag, ne_chunk
 from nltk.corpus import stopwords
-import mysql.connector
 
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
@@ -53,20 +52,6 @@ def generate_wordcloud(text):
     plt.axis('off')
     st.pyplot()
 
-# Function to connect to MySQL Server
-def connect_to_mysql():
-    try:
-        conn = mysql.connector.connect(
-            host="your_host",
-            user="your_username",
-            password="your_password",
-            database="your_database"
-        )
-        if conn.is_connected():
-            return conn
-    except Exception as e:
-        st.error("Error connecting to MySQL Server: " + str(e))
-
 # Main function
 def main():
     st.title("Text Analysis App")
@@ -96,7 +81,7 @@ def main():
             generate_wordcloud(text)
 
         # Display results in a table
-        df = pd.DataFrame({'Text': [text]})
+        df = pd.DataFrame({'Text': [text], 'Entities': [', '.join(entities) if ner_analysis else '']})
         st.write("Analysis Results:")
         st.write(df)
 
@@ -104,16 +89,6 @@ def main():
         if st.button("Download CSV"):
             df.to_csv('analysis_results.csv', index=False)
             st.success("Results downloaded successfully!")
-
-        # Connect to MySQL Server
-        conn = connect_to_mysql()
-        if conn:
-            cursor = conn.cursor()
-            cursor.execute("CREATE TABLE IF NOT EXISTS analysis_results (text TEXT)")
-            cursor.execute("INSERT INTO analysis_results (text) VALUES (%s)", (text,))
-            conn.commit()
-            cursor.close()
-            conn.close()
 
 if __name__ == "__main__":
     main()
