@@ -9,42 +9,49 @@ Original file is located at
 import streamlit as st
 import pandas as pd
 import nltk
-from nltk import word_tokenize
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from nltk import word_tokenize, pos_tag, ne_chunk
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
-from collections import Counter
+from textblob import TextBlob
 
 # Download NLTK resources
 nltk.download('punkt')
-nltk.download('vader_lexicon')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('maxent_ne_chunker')
+nltk.download('words')
 
 # Function to perform Sentiment Analysis
 def analyze_sentiment(text):
-    sia = SentimentIntensityAnalyzer()
-    sentiment_scores = []
-    words = word_tokenize(text)
-    for word in words:
-        score = sia.polarity_scores(word)['compound']
-        sentiment_scores.append(score)
-    return sentiment_scores
+    blob = TextBlob(text)
+    sentiment_score = blob.sentiment.polarity
+    if sentiment_score > 0:
+        return 'Positive'
+    elif sentiment_score < 0:
+        return 'Negative'
+    else:
+        return 'Neutral'
+
+# Function to perform Named Entity Recognition
+def analyze_entities(text):
+    entities = []
+    sentences = nltk.sent_tokenize(text)
+    for sentence in sentences:
+        words = nltk.word_tokenize(sentence)
+        tagged_words = nltk.pos_tag(words)
+        chunked = nltk.ne_chunk(tagged_words)
+        entities.extend([(c[0], c.label()) for c in chunked if hasattr(c, 'label')])
+    return entities
 
 # Function to generate Word Cloud
-def generate_wordcloud(text):
+def generate_wordcloud(text, fig=None):
     wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(text)
-    plt.figure(figsize=(10, 5))
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis('off')
-    st.pyplot()
-
-# Function to plot histogram of sentiment scores
-def plot_sentiment_histogram(sentiment_scores):
-    plt.figure(figsize=(8, 5))
-    plt.hist(sentiment_scores, bins=20, color='skyblue', edgecolor='black', alpha=0.7)
-    plt.xlabel('Sentiment Score')
-    plt.ylabel('Frequency')
-    plt.title('Sentiment Score Distribution')
-    st.pyplot()
+    if fig is None:
+        fig, ax = plt.subplots(figsize=(10, 5))
+    else:
+        ax = fig.subplots()
+    ax.imshow(wordcloud, interpolation='bilinear')
+    ax.axis('off')
+    st.pyplot(fig)
 
 # Main function
 def main():
@@ -60,26 +67,31 @@ def main():
         st.dataframe(df, height=400)  # Display uploaded data in a table format
 
         # Analyze sentiment
-        sentiment_scores = analyze_sentiment(text)
-        st.write("Sentiment Scores:", sentiment_scores)
+        sentiment = analyze_sentiment(text)
+        st.write("Sentiment:", sentiment)
 
         # Generate sentiment histogram
-        if sentiment_scores:
-            plot_sentiment_histogram(sentiment_scores)
+        if sentiment:
+            sentiments = [analyze_sentiment(row) for row in df[text_column].dropna()]
+            sentiment_df = pd.DataFrame(sentiments, columns=['Sentiment'])
+            st.write("Sentiment Histogram:")
+            st.bar_chart(sentiment_df['Sentiment'].value_counts())
 
-        # Perform word frequency analysis
-        word_freq = Counter(word_tokenize(text))
-        word_freq_df = pd.DataFrame.from_dict(word_freq, orient='index', columns=['Frequency'])
-        word_freq_df.index.name = 'Word'
-        word_freq_df = word_freq_df.reset_index()
-        st.write("Word Frequency Analysis:")
-        st.dataframe(word_freq_df)
+        # Perform Named Entity Recognition
+        ner_analysis = st.checkbox("Perform Named Entity Recognition")
+        if ner_analysis:
+            entities = []
+            for chunk in nltk.sent_tokenize(text):
+                entities.extend(analyze_entities(chunk))
+            entities_df = pd.DataFrame(entities, columns=['Entity', 'Type'])
+            st.write("Named Entities:")
+            st.dataframe(entities_df)  # Display named entities in a table format
 
         # Generate Word Cloud
         wordcloud_analysis = st.checkbox("Generate Word Cloud")
         if wordcloud_analysis:
-            generate_wordcloud(text)
+            fig, ax = plt.subplots()
+            generate_wordcloud(text, fig=fig)
 
 if __name__ == "__main__":
     main()
-
