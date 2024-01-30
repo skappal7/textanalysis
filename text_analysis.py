@@ -10,11 +10,10 @@ import streamlit as st
 import pandas as pd
 import nltk
 from nltk import word_tokenize, pos_tag, ne_chunk
-from wordcloud import WordCloud
 import matplotlib.pyplot as plt
+from wordcloud import WordCloud
 from textblob import TextBlob
 
-# Download NLTK resources
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
 nltk.download('maxent_ne_chunker')
@@ -44,7 +43,7 @@ def analyze_entities(text):
 
 # Function to generate Word Cloud
 def generate_wordcloud(text):
-    wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
+    wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(text)
     plt.figure(figsize=(10, 5))
     plt.imshow(wordcloud, interpolation='bilinear')
     plt.axis('off')
@@ -54,37 +53,28 @@ def generate_wordcloud(text):
 def main():
     st.title("Text Analysis App")
 
-    # Option to upload a CSV file for analysis
-    uploaded_file = st.file_uploader("Upload CSV file for analysis:", type=["csv"])
-
+    # Option to upload a CSV file for sentiment analysis
+    uploaded_file = st.file_uploader("Upload CSV file for sentiment analysis:", type=["csv"])
     if uploaded_file is not None:
         df = pd.read_csv(uploaded_file)
-
-        # Display uploaded data in a table format
+        text_column = st.selectbox("Select text column:", df.columns)
+        text = ' '.join(df[text_column].dropna())
         st.write("Uploaded Data:")
         st.dataframe(df, height=400)
 
-        # Select text column for analysis
-        text_column = st.selectbox("Select text column for analysis:", df.columns)
-
-        # Join text data if it contains NaN values
-        text = ' '.join(df[text_column].astype(str))
-
-        # Analyze entities
+        # Generate entities based on the uploaded text
         entities = analyze_entities(text)
         entities_df = pd.DataFrame(entities, columns=['Entity', 'Type'])
-
-        # Display named entities
         st.write("Named Entities:")
-        st.dataframe(entities_df, height=200)
+        st.dataframe(entities_df)
 
-        # Analyze sentiment
+        # Sentiment analysis
         sentiment = analyze_sentiment(text)
         st.write("Sentiment:", sentiment)
 
         # Generate sentiment histogram
         if sentiment:
-            sentiments = [analyze_sentiment(row) for row in df[text_column].astype(str)]
+            sentiments = [analyze_sentiment(row) for row in df[text_column].dropna()]
             sentiment_df = pd.DataFrame(sentiments, columns=['Sentiment'])
             st.write("Sentiment Histogram:")
             st.bar_chart(sentiment_df['Sentiment'].value_counts())
@@ -92,11 +82,11 @@ def main():
         # Generate Word Cloud
         generate_wordcloud(text)
 
-        # Download analysis results as CSV
-        if st.button("Download Analysis Results CSV"):
+        # Download results as CSV
+        if st.button("Download CSV"):
             analysis_results = pd.concat([df, entities_df], axis=1)
             analysis_results.to_csv('analysis_results.csv', index=False)
-            st.success("Analysis results downloaded successfully!")
+            st.success("Results downloaded successfully!")
 
 if __name__ == "__main__":
     main()
