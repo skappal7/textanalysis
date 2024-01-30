@@ -14,6 +14,10 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from nltk import ne_chunk, pos_tag, word_tokenize
 from nltk.tree import Tree
+import nltk
+
+# Download NLTK resources
+nltk.download('punkt')
 
 # Function to perform sentiment analysis using TextBlob
 def analyze_sentiment(text):
