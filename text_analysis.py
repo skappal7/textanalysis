@@ -11,8 +11,15 @@ from textblob import TextBlob
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import pandas as pd
-import spacy
+import nltk
+from nltk import word_tokenize, pos_tag, ne_chunk
+from nltk.corpus import stopwords
 import mysql.connector
+
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('maxent_ne_chunker')
+nltk.download('words')
 
 # Function to perform Sentiment Analysis
 def analyze_sentiment(text):
@@ -27,9 +34,15 @@ def analyze_sentiment(text):
 
 # Function to perform Named Entity Recognition
 def analyze_entities(text):
-    nlp = spacy.load("en_core_web_sm")
-    doc = nlp(text)
-    entities = [(ent.text, ent.label_) for ent in doc.ents]
+    entities = []
+    sentences = nltk.sent_tokenize(text)
+    for sentence in sentences:
+        words = nltk.word_tokenize(sentence)
+        tagged_words = nltk.pos_tag(words)
+        chunked = nltk.ne_chunk(tagged_words)
+        for entity in chunked:
+            if hasattr(entity, 'label'):
+                entities.append(' '.join(c[0] for c in entity.leaves()))
     return entities
 
 # Function to generate Word Cloud
@@ -76,9 +89,7 @@ def main():
         # Perform Named Entity Recognition
         if ner_analysis:
             entities = analyze_entities(text)
-            st.write("Entities:")
-            for entity, label in entities:
-                st.write(f"{entity} ({label})")
+            st.write("Entities:", ', '.join(entities))
 
         # Generate Word Cloud
         if wordcloud_analysis:
