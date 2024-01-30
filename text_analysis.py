@@ -10,8 +10,8 @@ import streamlit as st
 import pandas as pd
 import nltk
 from nltk import word_tokenize, pos_tag, ne_chunk
-import matplotlib.pyplot as plt
 from wordcloud import WordCloud
+import matplotlib.pyplot as plt
 from textblob import TextBlob
 
 nltk.download('punkt')
@@ -59,16 +59,7 @@ def main():
         df = pd.read_csv(uploaded_file)
         text_column = st.selectbox("Select text column:", df.columns)
         text = ' '.join(df[text_column].dropna())
-        st.write("Uploaded Data:")
-        st.dataframe(df, height=400)
-
-        # Generate entities based on the uploaded text
-        entities = analyze_entities(text)
-        entities_df = pd.DataFrame(entities, columns=['Entity', 'Type'])
-        st.write("Named Entities:")
-        st.dataframe(entities_df)
-
-        # Sentiment analysis
+        st.write("Text for sentiment analysis:", text)
         sentiment = analyze_sentiment(text)
         st.write("Sentiment:", sentiment)
 
@@ -79,14 +70,40 @@ def main():
             st.write("Sentiment Histogram:")
             st.bar_chart(sentiment_df['Sentiment'].value_counts())
 
+        # Display uploaded data in a table
+        st.write("Uploaded Data:")
+        st.dataframe(df, height=400)
+
+    # User text input
+    text = st.text_area("Or enter text for analysis:")
+
+    # Sidebar for analysis selection
+    st.sidebar.title("Analysis Selection")
+    ner_analysis = st.sidebar.checkbox("Named Entity Recognition")
+    wordcloud_analysis = st.sidebar.checkbox("Word Cloud")
+
+    if st.button("Analyze"):
+        # Perform Named Entity Recognition
+        if ner_analysis:
+            entities = analyze_entities(text)
+            entities_df = pd.DataFrame(entities, columns=['Entity', 'Type'])
+            st.write("Named Entities:")
+            st.dataframe(entities_df)
+
         # Generate Word Cloud
-        generate_wordcloud(text)
+        if wordcloud_analysis:
+            generate_wordcloud(text)
+
+        # Display results in a table
+        if ner_analysis:
+            st.write("Analysis Results:")
+            st.write(pd.DataFrame({'Text': [text]}))
 
         # Download results as CSV
         if st.button("Download CSV"):
-            analysis_results = pd.concat([df, entities_df], axis=1)
-            analysis_results.to_csv('analysis_results.csv', index=False)
-            st.success("Results downloaded successfully!")
+            if ner_analysis:
+                pd.DataFrame({'Text': [text]}).to_csv('analysis_results.csv', index=False)
+                st.success("Results downloaded successfully!")
 
 if __name__ == "__main__":
     main()
