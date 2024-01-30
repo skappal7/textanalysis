@@ -118,7 +118,9 @@ def main():
         st.subheader("Histogram")
         if 'text' in df.columns:
             text_column = st.sidebar.selectbox("Select column for histogram:", df.columns)
-            st.write(df[text_column].hist())
+            fig, ax = plt.subplots()  # Create a Matplotlib figure and axes
+            df[text_column].hist(ax=ax)  # Plot the histogram on the axes
+            st.pyplot(fig)  # Display the figure using st.pyplot()
         else:
             st.warning("No data to display.")
     
@@ -127,9 +129,10 @@ def main():
         if 'text' in df.columns:
             text = ' '.join(df['text'])
             wordcloud = WordCloud().generate(text)
-            plt.imshow(wordcloud, interpolation='bilinear')
-            plt.axis("off")
-            st.pyplot()
+            fig, ax = plt.subplots()  # Create a Matplotlib figure and axes
+            ax.imshow(wordcloud, interpolation='bilinear')
+            ax.axis("off")
+            st.pyplot(fig)  # Display the figure using st.pyplot()
         else:
             st.warning("No data to display.")
 
