@@ -1,8 +1,6 @@
-streamlit
+nltk
 pandas
-mysql-connector-python
-textblob
+streamlit
 wordcloud
 matplotlib
-nltk
 seaborn
