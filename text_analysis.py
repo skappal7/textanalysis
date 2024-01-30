@@ -50,7 +50,12 @@ def connect_to_mysql(host, user, password, database):
 
 # Streamlit app
 def main():
-    st.set_page_config(page_title="Text Analytics", layout="wide", initial_sidebar_state="expanded", theme="style.yml")
+    st.set_page_config(
+        page_title="Text Analytics",
+        layout="wide",
+        initial_sidebar_state="expanded",
+        page_icon=":memo:",
+        )
     st.title("Text Analytics")
     
     # Upload CSV or connect to MySQL
@@ -126,4 +131,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
