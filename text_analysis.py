@@ -54,29 +54,28 @@ def main():
     uploaded_file = st.file_uploader("Upload CSV file for sentiment analysis:", type=["csv"])
     if uploaded_file is not None:
         df = pd.read_csv(uploaded_file)
-        text_column = st.selectbox("Select text column:", df.columns)
-        text = ' '.join(df[text_column].dropna())
-        st.write("Uploaded Data:")
-        st.dataframe(df, height=400)  # Display uploaded data in a table format
 
-        # Analyze sentiment
-        sentiment = analyze_sentiment(text)
-        st.write("Sentiment:", sentiment)
+        # Slider to select the number of rows to analyze
+        chunk_size = st.slider("Select chunk size:", min_value=50, max_value=len(df), value=100)
 
-        # Generate sentiment histogram
-        if sentiment:
-            sentiments = [analyze_sentiment(row) for row in df[text_column].dropna()]
-            sentiment_df = pd.DataFrame(sentiments, columns=['Sentiment'])
-            st.write("Sentiment Histogram:")
-            st.bar_chart(sentiment_df['Sentiment'].value_counts())
+        # Analyze data in chunks
+        for i in range(0, len(df), chunk_size):
+            st.write(f"Analyzing rows {i+1}-{min(i+chunk_size, len(df))}")
 
-        # Generate Word Cloud for positive sentiment words
-        st.write("Positive Sentiment Word Cloud:")
-        generate_positive_wordcloud(text)
+            # Get text data for current chunk
+            text = ' '.join(df.iloc[i:min(i+chunk_size, len(df))][text_column].dropna())
 
-        # Generate Word Cloud for negative sentiment words
-        st.write("Negative Sentiment Word Cloud:")
-        generate_negative_wordcloud(text)
+            # Analyze sentiment
+            sentiment = analyze_sentiment(text)
+            st.write("Sentiment:", sentiment)
+
+            # Generate Word Cloud for positive sentiment words
+            st.write("Positive Sentiment Word Cloud:")
+            generate_positive_wordcloud(text)
+
+            # Generate Word Cloud for negative sentiment words
+            st.write("Negative Sentiment Word Cloud:")
+            generate_negative_wordcloud(text)
 
 if __name__ == "__main__":
     main()
