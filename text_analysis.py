@@ -55,6 +55,9 @@ def main():
     if uploaded_file is not None:
         df = pd.read_csv(uploaded_file)
 
+        # Select column for analysis
+        text_column = st.selectbox("Select text column for analysis:", df.columns)
+
         # Slider to select the number of rows to analyze
         chunk_size = st.slider("Select chunk size:", min_value=50, max_value=len(df), value=100)
 
