@@ -1,0 +1,21 @@
+theme:
+  primaryColor: "#1f77b4"
+  backgroundColor: "#f0f2f6"
+  secondaryBackgroundColor: "#ffffff"
+  textColor: "#262730"
+  font: "sans serif"
+
+config:
+  header:
+    fontFamily: "sans-serif"
+    backgroundColor: "#1f77b4"
+    textColor: "#ffffff"
+    fontSize: "1.5rem"
+  sidebar:
+    backgroundColor: "#ffffff"
+    textColor: "#262730"
+  body:
+    backgroundColor: "#f0f2f6"
+  footer:
+    backgroundColor: "#1f77b4"
+    textColor: "#ffffff"
