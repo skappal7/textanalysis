@@ -7,103 +7,102 @@ Original file is located at
     https://colab.research.google.com/drive/1-jb2PEpQaEKAasqcb5nmTQTeFm03luAl
 """
 import streamlit as st
-import pandas as pd
 from textblob import TextBlob
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
-from nltk import ne_chunk, pos_tag, word_tokenize
-from nltk.tree import Tree
-import nltk
+import pandas as pd
+import spacy
+import mysql.connector
 
-# Download NLTK resources
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-
-# Function to perform sentiment analysis using TextBlob
+# Function to perform Sentiment Analysis
 def analyze_sentiment(text):
     blob = TextBlob(text)
     sentiment_score = blob.sentiment.polarity
     if sentiment_score > 0:
-        return "Positive"
+        return 'Positive'
     elif sentiment_score < 0:
-        return "Negative"
+        return 'Negative'
     else:
-        return "Neutral"
+        return 'Neutral'
 
-# Function to perform named entity recognition using NLTK
-def analyze_named_entities(text):
-    entities = []
-    for chunk in ne_chunk(pos_tag(word_tokenize(text))):
-        if isinstance(chunk, Tree):
-            entities.append(" ".join([token for token, pos in chunk.leaves()]))
+# Function to perform Named Entity Recognition
+def analyze_entities(text):
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(text)
+    entities = [(ent.text, ent.label_) for ent in doc.ents]
     return entities
 
-# Streamlit app
+# Function to generate Word Cloud
+def generate_wordcloud(text):
+    wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(text)
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    st.pyplot()
+
+# Function to connect to MySQL Server
+def connect_to_mysql():
+    try:
+        conn = mysql.connector.connect(
+            host="your_host",
+            user="your_username",
+            password="your_password",
+            database="your_database"
+        )
+        if conn.is_connected():
+            return conn
+    except Exception as e:
+        st.error("Error connecting to MySQL Server: " + str(e))
+
+# Main function
 def main():
-    st.set_page_config(
-        page_title="Text Analytics",
-        layout="wide",
-        initial_sidebar_state="expanded",
-        page_icon=":memo:",
-    )
-    st.title("Text Analytics")
-    
-    # Upload CSV
-    uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
-    if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file)
-        # Filter out only text columns
-        text_columns = [col for col in df.columns if df[col].dtype == 'object']
-        df = df[text_columns].drop(columns=['unnamed', 'rows'], errors='ignore')
+    st.title("Text Analysis App")
 
-        # Display uploaded data
+    # User text input
+    text = st.text_area("Enter text:")
+
+    # Sidebar for analysis selection
+    st.sidebar.title("Analysis Selection")
+    sentiment_analysis = st.sidebar.checkbox("Sentiment Analysis")
+    ner_analysis = st.sidebar.checkbox("Named Entity Recognition")
+    wordcloud_analysis = st.sidebar.checkbox("Word Cloud")
+
+    if st.button("Analyze"):
+        # Perform Sentiment Analysis
+        if sentiment_analysis:
+            sentiment = analyze_sentiment(text)
+            st.write("Sentiment:", sentiment)
+
+        # Perform Named Entity Recognition
+        if ner_analysis:
+            entities = analyze_entities(text)
+            st.write("Entities:")
+            for entity, label in entities:
+                st.write(f"{entity} ({label})")
+
+        # Generate Word Cloud
+        if wordcloud_analysis:
+            generate_wordcloud(text)
+
+        # Display results in a table
+        df = pd.DataFrame({'Text': [text]})
+        st.write("Analysis Results:")
         st.write(df)
-    
-        # Text analytics options
-        st.sidebar.title("Text Analytics Options")
-        sentiment_analysis = st.sidebar.checkbox("Sentiment Analysis")
-        named_entity_recognition = st.sidebar.checkbox("Named Entity Recognition")
 
-        # Perform text analytics based on selected options
-        if st.button("Perform Text Analytics"):
-            for col in text_columns:
-                st.subheader(f"Text Analytics for Column: {col}")
-                
-                if sentiment_analysis:
-                    # Sentiment analysis
-                    st.subheader("Sentiment Analysis Results")
-                    df[f'{col}_Sentiment'] = df[col].apply(analyze_sentiment)
-                    st.write(df[[col, f'{col}_Sentiment']])
+        # Download results as CSV
+        if st.button("Download CSV"):
+            df.to_csv('analysis_results.csv', index=False)
+            st.success("Results downloaded successfully!")
 
-                if named_entity_recognition:
-                    # Named entity recognition
-                    st.subheader("Named Entity Recognition Results")
-                    df[f'{col}_Entities'] = df[col].apply(analyze_named_entities)
-                    st.write(df[[col, f'{col}_Entities']])
-
-    # Visualizations
-    st.sidebar.title("Visualizations")
-    if st.sidebar.checkbox("Show Histogram"):
-        st.subheader("Histogram")
-        if 'text' in df.columns:
-            text_column = st.sidebar.selectbox("Select column for histogram:", df.columns)
-            fig, ax = plt.subplots(figsize=(8, 6))  # Set a smaller figure size
-            df[text_column].hist(ax=ax)  # Plot the histogram on the axes
-            st.pyplot(fig)  # Display the figure using st.pyplot()
-        else:
-            st.warning("No data to display.")
-    
-    if st.sidebar.checkbox("Show Word Cloud"):
-        st.subheader("Word Cloud")
-        if 'text' in df.columns:
-            text = ' '.join(df['text'])
-            wordcloud = WordCloud().generate(text)
-            fig, ax = plt.subplots(figsize=(8, 6))  # Set a smaller figure size
-            ax.imshow(wordcloud, interpolation='bilinear')
-            ax.axis("off")
-            st.pyplot(fig)  # Display the figure using st.pyplot()
-        else:
-            st.warning("No data to display.")
+        # Connect to MySQL Server
+        conn = connect_to_mysql()
+        if conn:
+            cursor = conn.cursor()
+            cursor.execute("CREATE TABLE IF NOT EXISTS analysis_results (text TEXT)")
+            cursor.execute("INSERT INTO analysis_results (text) VALUES (%s)", (text,))
+            conn.commit()
+            cursor.close()
+            conn.close()
 
 if __name__ == "__main__":
     main()
