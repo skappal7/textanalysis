@@ -10,8 +10,8 @@ import streamlit as st
 import pandas as pd
 import nltk
 from nltk import word_tokenize, pos_tag, ne_chunk
-import matplotlib.pyplot as plt
 from wordcloud import WordCloud
+import matplotlib.pyplot as plt
 from textblob import TextBlob
 
 nltk.download('punkt')
@@ -44,10 +44,10 @@ def analyze_entities(text):
 # Function to generate Word Cloud
 def generate_wordcloud(text):
     wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(text)
-    plt.figure(figsize=(10, 5))
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis('off')
-    st.pyplot()
+    fig, ax = plt.subplots()
+    ax.imshow(wordcloud, interpolation='bilinear')
+    ax.axis('off')
+    return fig
 
 # Main function
 def main():
@@ -80,7 +80,8 @@ def main():
             st.bar_chart(sentiment_df['Sentiment'].value_counts())
 
         # Generate Word Cloud
-        generate_wordcloud(text)
+        fig = generate_wordcloud(text)
+        st.pyplot(fig)
 
         # Download results as CSV
         if st.button("Download CSV"):
