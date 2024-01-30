@@ -7,14 +7,12 @@ Original file is located at
     https://colab.research.google.com/drive/1-jb2PEpQaEKAasqcb5nmTQTeFm03luAl
 """
 import streamlit as st
-from textblob import TextBlob
-from wordcloud import WordCloud
-import matplotlib.pyplot as plt
 import pandas as pd
 import nltk
 from nltk import word_tokenize, pos_tag, ne_chunk
-from nltk.corpus import stopwords
-from nltk.chunk import conlltags2tree, tree2conlltags
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+from textblob import TextBlob
 
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
@@ -40,7 +38,7 @@ def analyze_entities(text):
         words = nltk.word_tokenize(sentence)
         tagged_words = nltk.pos_tag(words)
         chunked = nltk.ne_chunk(tagged_words)
-        entities.extend([(c[0], c[1]) for c in tree2conlltags(chunked)])
+        entities.extend([(c[0], c.label()) for c in chunked if hasattr(c, 'label')])
     return entities
 
 # Function to generate Word Cloud
@@ -49,7 +47,7 @@ def generate_wordcloud(text):
     plt.figure(figsize=(10, 5))
     plt.imshow(wordcloud, interpolation='bilinear')
     plt.axis('off')
-    return plt
+    st.pyplot()
 
 # Main function
 def main():
@@ -90,23 +88,21 @@ def main():
             entities = analyze_entities(text)
             entities_df = pd.DataFrame(entities, columns=['Entity', 'Type'])
             st.write("Named Entities:")
-            st.dataframe(entities_df, height=200)
+            st.dataframe(entities_df)
 
         # Generate Word Cloud
         if wordcloud_analysis:
-            fig = generate_wordcloud(text)
-            st.pyplot(fig)
+            generate_wordcloud(text)
 
         # Display results in a table
         if ner_analysis:
-            df = pd.DataFrame({'Text': [text]})
             st.write("Analysis Results:")
-            st.write(df)
+            st.write(pd.DataFrame({'Text': [text]}))
 
         # Download results as CSV
         if st.button("Download CSV"):
             if ner_analysis:
-                df.to_csv('analysis_results.csv', index=False)
+                pd.DataFrame({'Text': [text]}).to_csv('analysis_results.csv', index=False)
                 st.success("Results downloaded successfully!")
 
 if __name__ == "__main__":
