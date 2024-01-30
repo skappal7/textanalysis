@@ -59,19 +59,27 @@ def main():
         # Display uploaded data
         st.write(df)
     
+        # Text analytics options
+        st.sidebar.title("Text Analytics Options")
+        sentiment_analysis = st.sidebar.checkbox("Sentiment Analysis")
+        named_entity_recognition = st.sidebar.checkbox("Named Entity Recognition")
+
         # Perform text analytics based on selected options
         if st.button("Perform Text Analytics"):
             for col in text_columns:
                 st.subheader(f"Text Analytics for Column: {col}")
-                # Sentiment analysis
-                st.subheader("Sentiment Analysis Results")
-                df[f'{col}_Sentiment'] = df[col].apply(analyze_sentiment)
-                st.write(df[[col, f'{col}_Sentiment']])
+                
+                if sentiment_analysis:
+                    # Sentiment analysis
+                    st.subheader("Sentiment Analysis Results")
+                    df[f'{col}_Sentiment'] = df[col].apply(analyze_sentiment)
+                    st.write(df[[col, f'{col}_Sentiment']])
 
-                # Named entity recognition
-                st.subheader("Named Entity Recognition Results")
-                df[f'{col}_Entities'] = df[col].apply(analyze_named_entities)
-                st.write(df[[col, f'{col}_Entities']])
+                if named_entity_recognition:
+                    # Named entity recognition
+                    st.subheader("Named Entity Recognition Results")
+                    df[f'{col}_Entities'] = df[col].apply(analyze_named_entities)
+                    st.write(df[[col, f'{col}_Entities']])
 
     # Visualizations
     st.sidebar.title("Visualizations")
