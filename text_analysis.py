@@ -32,19 +32,19 @@ def analyze_sentiment(text):
 def generate_positive_wordcloud(text):
     positive_words = ' '.join([word for word in word_tokenize(text) if analyze_sentiment(word) == 'Positive'])
     wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(positive_words)
-    plt.figure(figsize=(10, 5))
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis('off')
-    st.pyplot()
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.imshow(wordcloud, interpolation='bilinear')
+    ax.axis('off')
+    st.pyplot(fig)
 
 # Function to generate Word Cloud for negative sentiment words
 def generate_negative_wordcloud(text):
     negative_words = ' '.join([word for word in word_tokenize(text) if analyze_sentiment(word) == 'Negative'])
     wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(negative_words)
-    plt.figure(figsize=(10, 5))
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis('off')
-    st.pyplot()
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.imshow(wordcloud, interpolation='bilinear')
+    ax.axis('off')
+    st.pyplot(fig)
 
 # Main function
 def main():
@@ -80,4 +80,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
