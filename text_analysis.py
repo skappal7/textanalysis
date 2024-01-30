@@ -28,24 +28,6 @@ def analyze_sentiment(text):
     else:
         return 'Neutral'
 
-# Function to generate Word Cloud for positive sentiment words
-def generate_positive_wordcloud(text):
-    positive_words = ' '.join([word for word in word_tokenize(text) if analyze_sentiment(word) == 'Positive'])
-    wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(positive_words)
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.imshow(wordcloud, interpolation='bilinear')
-    ax.axis('off')
-    st.pyplot(fig)
-
-# Function to generate Word Cloud for negative sentiment words
-def generate_negative_wordcloud(text):
-    negative_words = ' '.join([word for word in word_tokenize(text) if analyze_sentiment(word) == 'Negative'])
-    wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(negative_words)
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.imshow(wordcloud, interpolation='bilinear')
-    ax.axis('off')
-    st.pyplot(fig)
-
 # Main function
 def main():
     st.title("Text Analysis App")
@@ -59,26 +41,29 @@ def main():
         text_column = st.selectbox("Select text column for analysis:", df.columns)
 
         # Slider to select the number of rows to analyze
-        chunk_size = st.slider("Select chunk size:", min_value=50, max_value=len(df), value=100)
+        num_rows = st.slider("Select number of rows to analyze:", min_value=50, max_value=len(df), value=100)
 
-        # Analyze data in chunks
-        for i in range(0, len(df), chunk_size):
-            st.write(f"Analyzing rows {i+1}-{min(i+chunk_size, len(df))}")
+        # Get text data for analysis
+        text = ' '.join(df[text_column].dropna()[:num_rows])
 
-            # Get text data for current chunk
-            text = ' '.join(df.iloc[i:min(i+chunk_size, len(df))][text_column].dropna())
+        # Analyze sentiment
+        sentiment = analyze_sentiment(text)
+        st.write("Sentiment:", sentiment)
 
-            # Analyze sentiment
-            sentiment = analyze_sentiment(text)
-            st.write("Sentiment:", sentiment)
+        # Generate sentiment histogram
+        if sentiment:
+            sentiments = [analyze_sentiment(row) for row in df[text_column].dropna()[:num_rows]]
+            sentiment_df = pd.DataFrame(sentiments, columns=['Sentiment'])
+            st.write("Sentiment Histogram:")
+            st.bar_chart(sentiment_df['Sentiment'].value_counts())
 
-            # Generate Word Cloud for positive sentiment words
-            st.write("Positive Sentiment Word Cloud:")
-            generate_positive_wordcloud(text)
-
-            # Generate Word Cloud for negative sentiment words
-            st.write("Negative Sentiment Word Cloud:")
-            generate_negative_wordcloud(text)
+        # Generate Word Cloud for sentiment words
+        wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(text)
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.imshow(wordcloud, interpolation='bilinear')
+        ax.axis('off')
+        st.pyplot(fig)
 
 if __name__ == "__main__":
     main()
+
