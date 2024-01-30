@@ -47,6 +47,8 @@ def generate_wordcloud(text, fig=None):
     wordcloud = WordCloud(width=800, height=400, background_color ='white').generate(text)
     if fig is None:
         fig, ax = plt.subplots(figsize=(10, 5))
+    else:
+        ax = fig.subplots()
     ax.imshow(wordcloud, interpolation='bilinear')
     ax.axis('off')
     st.pyplot(fig)
