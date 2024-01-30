@@ -19,6 +19,7 @@ import nltk
 # Download NLTK resources
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
+nltk.download('maxent_ne_chunker')  # Add this line to download the missing resource
 
 # Function to perform sentiment analysis using TextBlob
 def analyze_sentiment(text):
