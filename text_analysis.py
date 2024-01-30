@@ -19,19 +19,9 @@ import nltk
 # Download NLTK resources
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
-nltk.download('maxent_ne_chunker')  # Add this line to download the missing resource
 
 # Function to perform sentiment analysis using TextBlob
 def analyze_sentiment(text):
-    """
-    Perform sentiment analysis on the input text using TextBlob.
-
-    Parameters:
-        text (str): Input text to analyze.
-
-    Returns:
-        str: Sentiment label ("Positive", "Negative", or "Neutral").
-    """
     blob = TextBlob(text)
     sentiment_score = blob.sentiment.polarity
     if sentiment_score > 0:
@@ -43,15 +33,6 @@ def analyze_sentiment(text):
 
 # Function to perform named entity recognition using NLTK
 def analyze_named_entities(text):
-    """
-    Perform named entity recognition on the input text using NLTK.
-
-    Parameters:
-        text (str): Input text to analyze.
-
-    Returns:
-        list: List of named entities found in the text.
-    """
     entities = []
     for chunk in ne_chunk(pos_tag(word_tokenize(text))):
         if isinstance(chunk, Tree):
@@ -60,18 +41,6 @@ def analyze_named_entities(text):
 
 # Function to connect to MySQL database
 def connect_to_mysql(host, user, password, database):
-    """
-    Connect to a MySQL database.
-
-    Parameters:
-        host (str): MySQL host address.
-        user (str): MySQL username.
-        password (str): MySQL password.
-        database (str): Database name.
-
-    Returns:
-        MySQLConnection: MySQL database connection object.
-    """
     try:
         conn = mysql.connector.connect(
             host=host,
@@ -91,7 +60,7 @@ def main():
         layout="wide",
         initial_sidebar_state="expanded",
         page_icon=":memo:",
-        )
+    )
     st.title("Text Analytics")
     
     # Upload CSV or connect to MySQL
@@ -117,14 +86,14 @@ def main():
                 cursor.execute(f"SELECT * FROM {table_name}")
                 data = cursor.fetchall()
                 df = pd.DataFrame(data, columns=[i[0] for i in cursor.description])
-                st.write(df)
+                st.write(df.drop(columns=['unnamed', 'rows'], errors='ignore'))
     
     # If CSV option is selected, upload file
     else:
         uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
         if uploaded_file is not None:
             df = pd.read_csv(uploaded_file)
-            st.write(df)
+            st.write(df.drop(columns=['unnamed', 'rows'], errors='ignore'))
     
     # Perform text analytics based on selected options
     if st.button("Perform Text Analytics"):
@@ -132,7 +101,7 @@ def main():
             st.subheader("Sentiment Analysis Results")
             if 'text' in df.columns:
                 df['Sentiment'] = df['text'].apply(analyze_sentiment)
-                st.write(df[['text', 'Sentiment']])
+                st.write(df[['text', 'Sentiment']].drop(columns=['unnamed', 'rows'], errors='ignore'))
             else:
                 st.warning("No 'text' column found in the data.")
         
@@ -140,7 +109,7 @@ def main():
             st.subheader("Named Entity Recognition Results")
             if 'text' in df.columns:
                 df['Entities'] = df['text'].apply(analyze_named_entities)
-                st.write(df[['text', 'Entities']])
+                st.write(df[['text', 'Entities']].drop(columns=['unnamed', 'rows'], errors='ignore'))
             else:
                 st.warning("No 'text' column found in the data.")
     
