@@ -50,7 +50,7 @@ def generate_wordcloud(text):
     plt.figure(figsize=(10, 5))
     plt.imshow(wordcloud, interpolation='bilinear')
     plt.axis('off')
-    st.pyplot()
+    return plt
 
 # Main function
 def main():
@@ -78,7 +78,8 @@ def main():
 
         # Generate Word Cloud
         if wordcloud_analysis:
-            generate_wordcloud(text)
+            fig = generate_wordcloud(text)
+            st.pyplot(fig)
 
         # Display results in a table
         df = pd.DataFrame({'Text': [text], 'Entities': [', '.join(entities) if ner_analysis else '']})
