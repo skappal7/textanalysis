@@ -10,10 +10,10 @@ import streamlit as st
 import pandas as pd
 import mysql.connector
 from textblob import TextBlob
-import spacy
-from spacy import displacy
-import matplotlib.pyplot as plt
 from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+from nltk import ne_chunk, pos_tag, word_tokenize
+from nltk.tree import Tree
 
 # Function to perform sentiment analysis using TextBlob
 def analyze_sentiment(text):
@@ -26,11 +26,12 @@ def analyze_sentiment(text):
     else:
         return "Neutral"
 
-# Function to perform named entity recognition using spaCy
+# Function to perform named entity recognition using NLTK
 def analyze_named_entities(text):
-    nlp = spacy.load("en_core_web_sm")
-    doc = nlp(text)
-    entities = [(entity.text, entity.label_) for entity in doc.ents]
+    entities = []
+    for chunk in ne_chunk(pos_tag(word_tokenize(text))):
+        if isinstance(chunk, Tree):
+            entities.append(" ".join([token for token, pos in chunk.leaves()]))
     return entities
 
 # Function to connect to MySQL database
@@ -49,6 +50,7 @@ def connect_to_mysql(host, user, password, database):
 
 # Streamlit app
 def main():
+    st.set_page_config(page_title="Text Analytics", layout="wide", initial_sidebar_state="expanded", theme="style.yml")
     st.title("Text Analytics")
     
     # Upload CSV or connect to MySQL
@@ -124,3 +126,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
