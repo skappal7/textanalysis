@@ -7,72 +7,69 @@ Original file is located at
     https://colab.research.google.com/drive/1-jb2PEpQaEKAasqcb5nmTQTeFm03luAl
 """
 import streamlit as st
-import pandas as pd 
-import spacy
-from gensim.summarization import summarize
-from sklearn.decomposition import LatentDirichletAllocation
+import pandas as pd
+import nltk
+from nltk import word_tokenize
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
+from textblob import TextBlob
 
-# Load pre-trained spaCy model
-nlp = spacy.load('en_core_web_sm')
+# Download NLTK resources
+nltk.download('punkt')
 
-# Function for topic modeling
-def extract_topics(doc):
-    # Vectorize text
-    vec = nlp(doc).vector  
-    # LDA Model
-    lda = LatentDirichletAllocation(n_components=10, random_state=42)  
-    lda.fit(vec)
-    return [(topic_id, topic) for topic_id, topic in enumerate(lda.components_)]
-
-# Function for NER  
-def extract_entities(doc):
-    doc = nlp(doc)
-    entities = [(ent.text, ent.label_) for ent in doc.ents]
-    return entities
+# Function to perform Sentiment Analysis
+def analyze_sentiment(text):
+    blob = TextBlob(text)
+    sentiment_score = blob.sentiment.polarity
+    if sentiment_score > 0:
+        return 'Positive'
+    elif sentiment_score < 0:
+        return 'Negative'
+    else:
+        return 'Neutral'
 
 # Main function
 def main():
+    st.title("Text Analysis App")
 
-  st.title("Advanced Text Analysis App")
-  
-  # Option to upload CSV
-  uploaded_file = st.file_uploader("Upload CSV", type=['csv']) 
-  
-  if uploaded_file:
-    df = pd.read_csv(uploaded_file)
+    # Option to upload a CSV file for sentiment analysis
+    uploaded_file = st.file_uploader("Upload CSV file for sentiment analysis:", type=["csv"])
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)
 
-    # Select text column
-    text_col =  st.selectbox("Select text column", df.columns)
+        # Select column for analysis
+        text_column = st.selectbox("Select text column for analysis:", df.columns)
 
-    # Number of rows to display
-    n = st.slider("Number of rows to display", 50, len(df), 100)
+        # Slider to select the number of rows to analyze
+        num_rows = st.slider("Select number of rows to analyze:", min_value=50, max_value=len(df), value=100)
 
-    # Extract text
-    data = df[text_col].dropna().iloc[:n].values
+        # Get text data for analysis
+        text = ' '.join(df[text_column].dropna()[:num_rows])
 
-    # Summarize text
-    summary = summarize(str(data))
-    st.subheader("Summary")
-    st.write(summary)
+        # Analyze sentiment
+        sentiment = analyze_sentiment(text)
+        st.write("Sentiment:", sentiment)
 
-    # Topic modeling
-    topics = extract_topics(str(data))
-    st.subheader("Topics")
-    for topic_id, topic in topics:
-        st.write(f"{topic_id}: {topic}")
+        # Generate sentiment histogram
+        if sentiment:
+            sentiments = [analyze_sentiment(row) for row in df[text_column].dropna()[:num_rows]]
+            sentiment_df = pd.DataFrame(sentiments, columns=['Sentiment'])
+            st.write("Sentiment Histogram:")
+            st.bar_chart(sentiment_df['Sentiment'].value_counts())
 
-    # NER on sample text
-    entities = extract_entities(data[0])
-    st.subheader("Named Entities")
-    st.write(entities)
+        # Separate positive and negative sentiment words
+        positive_words = ' '.join([word for word in word_tokenize(text) if analyze_sentiment(word) == 'Positive'])
+        negative_words = ' '.join([word for word in word_tokenize(text) if analyze_sentiment(word) == 'Negative'])
 
-    # Word Cloud
-    wc = WordCloud().generate(summary)
-    fig, ax = plt.subplots()
-    ax.imshow(wc)
-    st.pyplot(fig)
-    
-if __name__ == '__main__':
+        # Generate Word Cloud for positive sentiment words
+        positive_wordcloud = WordCloud(width=400, height=200, background_color ='white').generate(positive_words)
+        st.write("Positive Sentiment Word Cloud:")
+        st.image(positive_wordcloud.to_array(), caption='Positive Sentiment Word Cloud', use_column_width=True)
+
+        # Generate Word Cloud for negative sentiment words
+        negative_wordcloud = WordCloud(width=400, height=200, background_color ='white').generate(negative_words)
+        st.write("Negative Sentiment Word Cloud:")
+        st.image(negative_wordcloud.to_array(), caption='Negative Sentiment Word Cloud', use_column_width=True)
+
+if __name__ == "__main__":
     main()
